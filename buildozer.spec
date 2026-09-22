@@ -6,7 +6,7 @@
 [app]
 
 # (str) Title of your application
-title = My Application
+title = ARGUS RS-28S
 
 # (str) Package name
 package.name = myapp
@@ -42,7 +42,7 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy
+requirements = python3,kivy,plyer,numpy,opencv
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -101,27 +101,27 @@ fullscreen = 0
 #icon.adaptive_foreground.filename = %(source.dir)s/data/icon_fg.png
 #icon.adaptive_background.filename = %(source.dir)s/data/icon_bg.png
 
-# (list) Permissions
-# (See https://python-for-android.readthedocs.io/en/latest/buildoptions.html for all the supported syntaxes and properties)
-#android.permissions = android.permission.INTERNET, (name=android.permission.WRITE_EXTERNAL_STORAGE;maxSdkVersion=18)
+ (list) Permissions
+ (See https://python-for-android.readthedocs.io/en/latest/buildoptions.html for all the supported syntaxes and properties)
+android.permissions = CAMERA,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,RECORD_AUDIO,FOREGROUND_SERVICE,POST_NOTIFICATIONS,WAKE_LOCK,INTERNET
 
-# (list) features (adds uses-feature -tags to manifest)
+ (list) features (adds uses-feature -tags to manifest)
 #android.features = android.hardware.usb.host
 
 # (int) Target Android API, should be as high as possible.
-#android.api = 33
+android.api = 33
 
 # (int) Minimum API your APK / AAB will support.
-#android.minapi = 24
+android.minapi = 24
 
 # (int) Android SDK version to use
-#android.sdk = 20
+android.sdk = 20
 
 # (str) Android NDK version to use
-#android.ndk = 23b
+android.ndk = 23b
 
 # (int) Android NDK API to use. This is the minimum API your app will support, it should usually match android.minapi.
-#android.ndk_api = 21
+android.ndk_api = 21
 
 # (str) Android NDK directory (if empty, it will be automatically downloaded.)
 #android.ndk_path =
@@ -351,7 +351,7 @@ android.allow_backup = True
 
 # (str) Bootstrap to use for android builds
 # Run "buildozer android p4a -- bootstraps" for a list of valid values.
-# p4a.bootstrap = sdl2
+p4a.bootstrap = sdl2
 
 # (int) port number to specify an explicit --port= p4a argument (eg for bootstrap flask)
 #p4a.port =
@@ -402,7 +402,7 @@ ios.codesign.allowed = false
 #ios.codesign.development_team.release = <hexstring>
 
 # (str) Justification text to be provided for being able to select media
-#ios.media_usage_description = "<APP> needs to access your media in order to <Do X and Y and Z> "
+ios.media_usage_description = "<APP> needs to access your media in order to <Do X and Y and Z> "
 
 # (str) Justification text to be provided for being able to use local network
 #ios.local_network_usage_description = "<App> needs permissions to <Do X and Y and Z> in your Local Area Network"
@@ -485,7 +485,7 @@ warn_on_root = 1
 #   and extend the excluded directories to remove the HD content.
 #
 #       [app@demo]
-#       title = My Application (demo)
+#       title = ARGUS RS-28S (demo)
 #
 #       [app:source.exclude_patterns@demo]
 #       images/hd/*
