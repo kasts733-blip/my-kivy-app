@@ -1,22 +1,19 @@
 name: Build APK
-on: [push]
+on:
+  push:
+    branches: [ main ]
 jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
-      -uses: actions/checkout@v4
-      -uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-      -name: build APK
-        uses: ArstemSBulgakov/buildozer-action@v1
+      - uses: actions/checkout@v4
+      - name: Build APK
+        uses: ArtemSBulgakov/buildozer-action@v1
         id: buildozer
         with:
+          workdir: .
           command: buildozer android debug
-          buildozer-version: stable
-      -name: upload APK
-        uses: action/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-        name: my-apk
-        path: bin/*.apk
+          name: apk
+          path: bin/*.apk
