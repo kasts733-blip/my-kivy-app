@@ -240,8 +240,6 @@ android.ndk_api = 21
 # If you leave this blank, OUYA support will not be enabled
 #android.ouya.category = GAME
 
-# (str) Filename of OUYA Console icon. It must be a 732x412 png image.
-icon.filename = %(source.dir)s/icon.png
 
 # (str) XML file to include as an intent filters in <activity> tag
 #android.manifest.intent_filters =
