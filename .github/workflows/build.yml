@@ -1,5 +1,4 @@
 name: build
-
 on:
   push:
     branches: [ main ]
@@ -9,7 +8,12 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: ArtemSBulgakov/buildozer-action@master
+      
+      - name: Build APK
+        run: |
+          docker run --volume $PWD:/home/user/hostcwd kivy/buildozer:master buildozer android debug
+      
+      - uses: actions/upload-artifact@v4
         with:
-          command: buildozer android debug
-          buildozer_version: master
+          name: apk
+          path: bin/*.apk
