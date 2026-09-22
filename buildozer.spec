@@ -9,7 +9,7 @@
 title = ARGUS RS-28S
 
 # (str) Package name
-package.name = myapp
+package.name = Argusrs-28s
 
 # (str) Package domain (needed for android/ios packaging)
 package.domain = org.test
