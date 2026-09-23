@@ -112,13 +112,12 @@ android.permissions = CAMERA,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,RECORD
 android.api = 33
 
 # (int) Minimum API your APK / AAB will support.
-android.minapi = 24
+android.minapi = 21
 
 # (int) Android SDK version to use
-android.sdk = 20
 
 # (str) Android NDK version to use
-android.ndk = 23b
+android.ndk = 25b
 
 # (int) Android NDK API to use. This is the minimum API your app will support, it should usually match android.minapi.
 android.ndk_api = 21
@@ -141,8 +140,8 @@ android.ndk_api = 21
 # agreements. This is intended for automation only. If set to False,
 # the default, you will be shown the license when first running
 # buildozer.
-# android.accept_sdk_license = False
-
+android.accept_sdk_license_agreements = True
+android.build_tools_version = 33.0.2
 # (str) Android entry point, default is ok for Kivy-based app
 #android.entrypoint = org.kivy.android.PythonActivity
 
