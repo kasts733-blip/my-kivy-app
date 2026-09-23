@@ -121,7 +121,11 @@ android.permissions = CAMERA,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,RECORD
 android.api = 33
 
 # (int) Minimum API your APK / AAB will support.
-android.minapi = 21
+# FIX: p4a's numpy recipe (needed for your requirements list) refuses to
+# build below API 24 -- "In order to build 'numpy', you must set minimum ndk
+# api (minapi) to 24." Raised from 21 to 24. android.ndk_api below is kept
+# matching this, per this file's own guidance that the two should match.
+android.minapi = 24
 
 # (int) Android SDK version to use
 
@@ -134,13 +138,22 @@ android.minapi = 21
 android.ndk = 25b
 
 # (int) Android NDK API to use. This is the minimum API your app will support, it should usually match android.minapi.
-android.ndk_api = 21
+android.ndk_api = 24
 
 # (str) Android NDK directory (if empty, it will be automatically downloaded.)
 #android.ndk_path =
 
 # (str) Android SDK directory (if empty, it will be automatically downloaded.)
-#android.sdk_path =
+# FIX: this was commented out, so buildozer ignored the SDK your CI workflow
+# already downloaded and licensed at $HOME/android-sdk, and instead
+# auto-downloaded a second, OLDER, unlicensed copy of its own into
+# .buildozer/android/platform/android-sdk. That second copy's internal
+# license-accept attempt was never answered, so platform-tools and
+# build-tools never got installed there -- which is exactly why no aidl
+# binary could be found. Pointing this at the SDK the workflow provisions
+# makes buildozer reuse the one that's already correctly set up.
+# NOTE: $HOME is always /home/runner on GitHub's ubuntu-22.04 runners.
+android.sdk_path = /home/runner/android-sdk
 
 # (str) ANT directory (if empty, it will be automatically downloaded.)
 #android.ant_path =
