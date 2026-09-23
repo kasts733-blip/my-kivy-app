@@ -1,3 +1,4 @@
+
 name: build
 on:
   push:
@@ -13,10 +14,22 @@ jobs:
         with:
           python-version: '3.10'
  
+      # FIX #3: ubuntu-22.04 runners ship several JDKs pre-installed (8/11/17/21)
+      # with JAVA_HOME already pointing at one of them. Installing
+      # openjdk-17-jdk via apt does NOT change that, so sdkmanager kept
+      # launching under the runner's pre-existing (older) JVM and crashed with
+      # "class file version 61.0 ... only recognizes up to 55.0" -- sdkmanager
+      # needs Java 17 but was handed Java 11. setup-java pins JAVA_HOME/PATH
+      # to Java 17 explicitly for every step after this one.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+ 
       - name: Install system deps
         run: |
           sudo apt update
-          sudo apt install -y openjdk-17-jdk unzip libffi-dev libssl-dev libtinfo5 cmake autoconf automake libltdl-dev
+          sudo apt install -y unzip libffi-dev libssl-dev libtinfo5 cmake autoconf automake libltdl-dev
           pip install --upgrade pip
           pip install cython==0.29.33
           pip install https://github.com/kivy/buildozer/archive/master.zip
