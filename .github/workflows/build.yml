@@ -75,7 +75,14 @@ jobs:
             "build-tools;33.0.2"
  
       - name: Build APK
-        run: buildozer android debug
+        # FIX #4: buildozer.spec now points android.sdk_path at the SDK
+        # installed above, so buildozer reuses it instead of downloading its
+        # own. As a safety net, `yes |` auto-answers any further license
+        # prompt p4a raises internally (e.g. for the NDK or any package your
+        # manual sdkmanager install above didn't already cover) instead of
+        # silently skipping the package the way the unanswered prompt did
+        # last time.
+        run: yes | buildozer android debug
  
       - uses: actions/upload-artifact@v4
         with:
