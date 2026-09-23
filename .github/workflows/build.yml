@@ -2,17 +2,17 @@ name: build
 on:
   push:
     branches: [ main ]
-
+ 
 jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-
+ 
       - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-
+ 
       - name: Install system deps
         run: |
           sudo apt update
@@ -22,29 +22,48 @@ jobs:
           pip install https://github.com/kivy/buildozer/archive/master.zip
           pip install https://github.com/kivy/python-for-android/archive/master.zip
           rm -rf .buildozer
-
-      - name: Accept licenses + pre-install Build-Tools 37
+ 
+      - name: Install Android SDK cmdline-tools + accept licenses
         run: |
-          mkdir -p $HOME/.android/licenses
-          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $HOME/.android/licenses/android-sdk-license
-          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $HOME/.android/licenses/android-sdk-license
-          echo "24333f8a63b6825ea9c5514f83c1059b8ea11e33" >> $HOME/.android/licenses/android-sdk-license
-          echo "y" > $HOME/.android/licenses/android-sdk-preview-license
-          # Install cmdline-tools and accept
-          mkdir -p $HOME/android-sdk/cmdline-tools
-          cd $HOME/android-sdk/cmdline-tools
+          mkdir -p "$HOME/android-sdk/cmdline-tools"
+          cd "$HOME/android-sdk/cmdline-tools"
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
           unzip -q commandlinetools-linux-11076708_latest.zip
           mkdir -p latest
-          mv cmdline-tools/* latest/ || true
-          export ANDROID_SDK_ROOT=$HOME/android-sdk
-          export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin
-          yes | sdkmanager --licenses || true
-          yes | sdkmanager "build-tools;33.0.2" "build-tools;37.0.0" "platforms;android-33" || true
-
+          mv cmdline-tools/* latest/
+          rm -rf cmdline-tools commandlinetools-linux-11076708_latest.zip
+ 
+          # FIX #1: the original workflow only `export`ed these inside this
+          # step's shell, so the later "Build APK" step never saw them and
+          # buildozer silently fell back to auto-downloading its own SDK.
+          # Writing to GITHUB_ENV / GITHUB_PATH makes them available to every
+          # step for the rest of the job, buildozer included.
+          echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> "$GITHUB_ENV"
+          echo "ANDROIDSDK=$HOME/android-sdk" >> "$GITHUB_ENV"
+          echo "ANDROID_HOME=$HOME/android-sdk" >> "$GITHUB_ENV"
+          echo "$HOME/android-sdk/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          echo "$HOME/android-sdk/platform-tools" >> "$GITHUB_PATH"
+ 
+          export ANDROID_SDK_ROOT="$HOME/android-sdk"
+          export PATH="$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin"
+ 
+          mkdir -p "$HOME/.android"
+          yes | sdkmanager --licenses --sdk_root="$ANDROID_SDK_ROOT" || true
+ 
+          # FIX #2: dropped build-tools;37.0.0. Newer build-tools packages
+          # restructured/removed the standalone aidl binary in a way
+          # python-for-android's SDK detection doesn't recognize, which is
+          # what produced "Aidl not found, please install it". 33.0.2 is the
+          # version p4a reliably finds aidl in, so it's the only one installed
+          # now to stop p4a from picking the newer, broken one.
+          sdkmanager --sdk_root="$ANDROID_SDK_ROOT" \
+            "platform-tools" \
+            "platforms;android-33" \
+            "build-tools;33.0.2"
+ 
       - name: Build APK
         run: buildozer android debug
-
+ 
       - uses: actions/upload-artifact@v4
         with:
           name: apk
