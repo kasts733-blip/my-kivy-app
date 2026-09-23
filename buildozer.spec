@@ -9,7 +9,11 @@
 title = ARGUS RS-28S
 
 # (str) Package name
-package.name = Argusrs-28s
+# FIX: original was "Argusrs-28s" -- Android application IDs / Java package
+# segments may only contain letters, digits and underscores. The hyphen here
+# would pass buildozer's own spec parsing but break later at the
+# Gradle/AndroidManifest build step with an invalid applicationId.
+package.name = argusrs28s
 
 # (str) Package domain (needed for android/ios packaging)
 package.domain = org.test
@@ -101,11 +105,16 @@ fullscreen = 0
 #icon.adaptive_foreground.filename = %(source.dir)s/data/icon_fg.png
 #icon.adaptive_background.filename = %(source.dir)s/data/icon_bg.png
 
- (list) Permissions
- (See https://python-for-android.readthedocs.io/en/latest/buildoptions.html for all the supported syntaxes and properties)
+# FIX: these two description lines were missing their leading "#", so they
+# were indented plain text with no preceding key=value line. Per this file's
+# own footer notes, indented text is parsed as a multiline continuation --
+# with nothing to continue, ConfigParser raises a parsing error and buildozer
+# fails before it even reaches the Android SDK/NDK stage.
+# (list) Permissions
+# (See https://python-for-android.readthedocs.io/en/latest/buildoptions.html for all the supported syntaxes and properties)
 android.permissions = CAMERA,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,RECORD_AUDIO,FOREGROUND_SERVICE,POST_NOTIFICATIONS,WAKE_LOCK,INTERNET
 
- (list) features (adds uses-feature -tags to manifest)
+# (list) features (adds uses-feature -tags to manifest)
 #android.features = android.hardware.usb.host
 
 # (int) Target Android API, should be as high as possible.
@@ -117,7 +126,12 @@ android.minapi = 21
 # (int) Android SDK version to use
 
 # (str) Android NDK version to use
-android.ndk = 28c
+# FIX: 28c is a very recent NDK release that the current python-for-android
+# toolchain may not have a tested recipe/toolchain path for yet, risking a
+# follow-up "NDK not supported" / clang-not-found failure. 25b is the
+# long-standing, reliably-supported pairing with p4a. Revert to 28c only if
+# you specifically need a feature from it and have confirmed p4a supports it.
+android.ndk = 25b
 
 # (int) Android NDK API to use. This is the minimum API your app will support, it should usually match android.minapi.
 android.ndk_api = 21
