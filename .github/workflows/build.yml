@@ -13,7 +13,7 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install dependencies
+      - name: Install system deps
         run: |
           sudo apt update
           sudo apt install -y openjdk-17-jdk unzip libffi-dev libssl-dev libtinfo5 cmake autoconf automake libltdl-dev
@@ -23,13 +23,24 @@ jobs:
           pip install https://github.com/kivy/python-for-android/archive/master.zip
           rm -rf .buildozer
 
-      - name: Accept licenses
+      - name: Accept licenses + pre-install Build-Tools 37
         run: |
           mkdir -p $HOME/.android/licenses
           echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $HOME/.android/licenses/android-sdk-license
           echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $HOME/.android/licenses/android-sdk-license
           echo "24333f8a63b6825ea9c5514f83c1059b8ea11e33" >> $HOME/.android/licenses/android-sdk-license
-          echo "y" | sdkmanager --licenses || true
+          echo "y" > $HOME/.android/licenses/android-sdk-preview-license
+          # Install cmdline-tools and accept
+          mkdir -p $HOME/android-sdk/cmdline-tools
+          cd $HOME/android-sdk/cmdline-tools
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          unzip -q commandlinetools-linux-11076708_latest.zip
+          mkdir -p latest
+          mv cmdline-tools/* latest/ || true
+          export ANDROID_SDK_ROOT=$HOME/android-sdk
+          export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin
+          yes | sdkmanager --licenses || true
+          yes | sdkmanager "build-tools;33.0.2" "build-tools;37.0.0" "platforms;android-33" || true
 
       - name: Build APK
         run: buildozer android debug
