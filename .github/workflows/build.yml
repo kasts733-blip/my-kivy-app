@@ -74,6 +74,17 @@ jobs:
             "platforms;android-33" \
             "build-tools;33.0.2"
  
+          # FIX #5: buildozer/python-for-android checks for sdkmanager at the
+          # legacy path <sdk_root>/tools/bin/sdkmanager (from the old, now
+          # discontinued "tools" SDK package), not the modern
+          # cmdline-tools/latest/bin location used above. Without this,
+          # buildozer reports "sdkmanager is not installed" even though it
+          # plainly is. Symlinking the legacy path to the real binaries
+          # satisfies that check.
+          mkdir -p "$ANDROID_SDK_ROOT/tools/bin"
+          ln -sf "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "$ANDROID_SDK_ROOT/tools/bin/sdkmanager"
+          ln -sf "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/avdmanager" "$ANDROID_SDK_ROOT/tools/bin/avdmanager"
+ 
       - name: Build APK
         # FIX #4: buildozer.spec now points android.sdk_path at the SDK
         # installed above, so buildozer reuses it instead of downloading its
