@@ -46,17 +46,24 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-# FIX: numpy was unpinned, so buildozer/pip always installs the newest
-# release -- 2.3.0, whose unique.cpp uses std::unordered_map without
-# including <unordered_map>, a real bug that only surfaces against the
-# Android NDK's older bundled libc++ (clang 14 from NDK r25b). Pinned to
-# 1.26.4, a release long used successfully with python-for-android, to avoid
-# it without patching numpy's source via a custom recipe.
+# FIX: numpy was unpinned, so buildozer/pip always installed the newest
+# release -- at the time, 2.3.0, whose unique.cpp used std::unordered_map
+# without including <unordered_map>, a real numpy bug (numpy/numpy#29662)
+# that only surfaced against the Android NDK's older bundled libc++ (clang
+# 14 from NDK r25b), not against a desktop compiler.
+# Pinning down to numpy==v1.26.4 avoided that bug but broke opencv's build
+# instead: 1.26.4 uses numpy's older distutils/setup.py build system, which
+# installs its C headers to a different location than the modern meson-based
+# build opencv's recipe expects, so opencv's cv2 Python bindings then failed
+# with "numpy/ndarrayobject.h file not found".
+# Pinned to v2.3.5 instead: still meson-based (keeps opencv's header lookup
+# working) but released well after the unordered_map fix landed upstream, so
+# it should carry the fix without opencv's header mismatch.
 # NOTE: p4a's numpy recipe fetches via `git checkout <version>` against
-# NumPy's own repo, where release tags are prefixed "v" (e.g. v1.26.4) --
-# the version after == is passed straight through as the tag with no prefix
-# added, so it must be written as v1.26.4, not 1.26.4.
-requirements = python3,kivy,plyer,numpy==v1.26.4,opencv
+# NumPy's own repo, where release tags are prefixed "v" (e.g. v2.3.5) -- the
+# version after == is passed straight through as the tag with no prefix
+# added, so it must be written with the v, not bare 2.3.5.
+requirements = python3,kivy,plyer,numpy==v2.3.5,opencv
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
