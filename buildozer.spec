@@ -46,7 +46,14 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy,plyer,numpy,opencv
+# FIX: numpy was unpinned, so buildozer/pip always installs the newest
+# release -- currently 2.3.0, whose unique.cpp uses std::unordered_map
+# without including <unordered_map>, a real bug that only surfaces against
+# the Android NDK's older bundled libc++ (clang 14 from NDK r25b), not
+# against a desktop compiler. Pinned to 1.26.4, a release long used
+# successfully with python-for-android, to avoid it without patching numpy's
+# source via a custom recipe.
+requirements = python3,kivy,plyer,numpy==1.26.4,opencv
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
