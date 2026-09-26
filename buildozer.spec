@@ -154,7 +154,7 @@ android.api = 33
 # build below API 24 -- "In order to build 'numpy', you must set minimum ndk
 # api (minapi) to 24." Raised from 21 to 24. android.ndk_api below is kept
 # matching this, per this file's own guidance that the two should match.
-android.minapi = 24
+android.minapi = 21
 
 # (int) Android SDK version to use
 
