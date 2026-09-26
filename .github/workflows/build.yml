@@ -1,27 +1,100 @@
-name: Build APK
-on: [push]
+name: build
+on:
+  push:
+    branches: [ main ]
+ 
 jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
+ 
       - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-      - name: Install deps
-        run: |
-          pip install buildozer cython==0.29.36
-          sudo apt update && sudo apt install -y lld
-      - name: Build arm64 only
-        run: |
-          sed -i "s/^android.archs.*/android.archs = arm64-v8a/" buildozer.spec
-          buildozer android debug
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+ 
+      # FIX #3: ubuntu-22.04 runners ship several JDKs pre-installed (8/11/17/21)
+      # with JAVA_HOME already pointing at one of them. Installing
+      # openjdk-17-jdk via apt does NOT change that, so sdkmanager kept
+      # launching under the runner's pre-existing (older) JVM and crashed with
+      # "class file version 61.0 ... only recognizes up to 55.0" -- sdkmanager
+      # needs Java 17 but was handed Java 11. setup-java pins JAVA_HOME/PATH
+      # to Java 17 explicitly for every step after this one.
+      - uses: actions/setup-java@v4
         with:
-          name: apk-arm64
+          distribution: 'temurin'
+          java-version: '17'
+ 
+      - name: Install system deps
+        run: |
+          sudo apt update
+          sudo apt install -y unzip libffi-dev libssl-dev libtinfo5 cmake autoconf automake libltdl-dev
+          pip install --upgrade pip
+          pip install cython==0.29.33
+          pip install https://github.com/kivy/buildozer/archive/master.zip
+          pip install https://github.com/kivy/python-for-android/archive/master.zip
+          rm -rf .buildozer
+ 
+      - name: Install Android SDK cmdline-tools + accept licenses
+        run: |
+          mkdir -p "$HOME/android-sdk/cmdline-tools"
+          cd "$HOME/android-sdk/cmdline-tools"
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          unzip -q commandlinetools-linux-11076708_latest.zip
+          mkdir -p latest
+          mv cmdline-tools/* latest/
+          rm -rf cmdline-tools commandlinetools-linux-11076708_latest.zip
+ 
+          # FIX #1: the original workflow only `export`ed these inside this
+          # step's shell, so the later "Build APK" step never saw them and
+          # buildozer silently fell back to auto-downloading its own SDK.
+          # Writing to GITHUB_ENV / GITHUB_PATH makes them available to every
+          # step for the rest of the job, buildozer included.
+          echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> "$GITHUB_ENV"
+          echo "ANDROIDSDK=$HOME/android-sdk" >> "$GITHUB_ENV"
+          echo "ANDROID_HOME=$HOME/android-sdk" >> "$GITHUB_ENV"
+          echo "$HOME/android-sdk/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          echo "$HOME/android-sdk/platform-tools" >> "$GITHUB_PATH"
+ 
+          export ANDROID_SDK_ROOT="$HOME/android-sdk"
+          export PATH="$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin"
+ 
+          mkdir -p "$HOME/.android"
+          yes | sdkmanager --licenses --sdk_root="$ANDROID_SDK_ROOT" || true
+ 
+          # FIX #2: dropped build-tools;37.0.0. Newer build-tools packages
+          # restructured/removed the standalone aidl binary in a way
+          # python-for-android's SDK detection doesn't recognize, which is
+          # what produced "Aidl not found, please install it". 33.0.2 is the
+          # version p4a reliably finds aidl in, so it's the only one installed
+          # now to stop p4a from picking the newer, broken one.
+          sdkmanager --sdk_root="$ANDROID_SDK_ROOT" \
+            "platform-tools" \
+            "platforms;android-33" \
+            "build-tools;33.0.2"
+ 
+          # FIX #5: buildozer/python-for-android checks for sdkmanager at the
+          # legacy path <sdk_root>/tools/bin/sdkmanager (from the old, now
+          # discontinued "tools" SDK package), not the modern
+          # cmdline-tools/latest/bin location used above. Without this,
+          # buildozer reports "sdkmanager is not installed" even though it
+          # plainly is. Symlinking the legacy path to the real binaries
+          # satisfies that check.
+          mkdir -p "$ANDROID_SDK_ROOT/tools/bin"
+          ln -sf "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "$ANDROID_SDK_ROOT/tools/bin/sdkmanager"
+          ln -sf "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/avdmanager" "$ANDROID_SDK_ROOT/tools/bin/avdmanager"
+ 
+      - name: Build APK
+        # FIX #4: buildozer.spec now points android.sdk_path at the SDK
+        # installed above, so buildozer reuses it instead of downloading its
+        # own. As a safety net, `yes |` auto-answers any further license
+        # prompt p4a raises internally (e.g. for the NDK or any package your
+        # manual sdkmanager install above didn't already cover) instead of
+        # silently skipping the package the way the unanswered prompt did
+        # last time.
+        run: yes | buildozer android debug
+ 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk
           path: bin/*.apk
