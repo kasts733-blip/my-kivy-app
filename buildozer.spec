@@ -332,7 +332,15 @@ android.build_tools_version = 33.0.2
 
 # (list) The Android archs to build for, choices: armeabi-v7a, arm64-v8a, x86, x86_64
 # In past, was `android.arch` as we weren't supporting builds for multiple archs at the same time.
-android.archs = arm64-v8a, 
+# FIX: building both arm64-v8a and armeabi-v7a in one job -- alongside a
+# from-source Python 3.14, numpy, and opencv, each compiled twice -- was
+# exhausting the GitHub-hosted runner's disk space (confirmed by a storage
+# error in a later step). Narrowed to arm64-v8a only for now, which is what
+# the overwhelming majority of real Android devices use today. Add
+# armeabi-v7a back (android.archs = arm64-v8aarmeabi-v7a) once the
+# arm64-v8a build succeeds end to end, ideally in its own separate run
+# rather than alongside it, to keep disk usage per run manageable.
+android.archs = arm64-v8a
 
 # (int) overrides automatic versionCode computation (used in build.gradle)
 # this is not the same as app version and should only be edited if you know what you're doing
