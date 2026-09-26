@@ -63,7 +63,15 @@ version = 0.1
 # NumPy's own repo, where release tags are prefixed "v" (e.g. v2.3.5) -- the
 # version after == is passed straight through as the tag with no prefix
 # added, so it must be written with the v, not bare 2.3.5.
-requirements = python3,kivy,plyer,numpy==v2.3.5,opencv
+# FIX: python3 was unpinned, so p4a's hostpython3/python3 recipes built
+# whatever the newest CPython tag is -- currently 3.14.2, a release young
+# enough that no prebuilt Kivy wheel exists for it on any platform. Kivy's
+# own recipe runs a `pip install kivy==2.3.1 --dry-run` wheel-availability
+# check against the exact Python version/platform being built, and treats
+# "no matching distribution" as a fatal error rather than falling back to
+# building from source. Pinned python3 to 3.11.6, a release with years of
+# track record building successfully with Kivy/numpy/opencv on Android.
+requirements = python3==3.11.6,kivy,plyer,numpy==v2.3.5,opencv
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
