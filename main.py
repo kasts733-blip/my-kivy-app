@@ -27,6 +27,16 @@ except ImportError:
 if kivy_platform == 'android':
     from android.permissions import request_permissions, Permission
 
+# Pull Android dynamic runtime permission triggers if executing inside an APK
+if kivy_platform == 'android':
+    from android.permissions import request_permissions, Permission
+    request_permissions([
+        Permission.CAMERA,
+        Permission.RECORD_AUDIO,
+        Permission.WRITE_EXTERNAL_STORAGE,
+        Permission.READ_EXTERNAL_STORAGE,
+        Permission.POST_NOTIFICATIONS
+    ])
 # Global cross-thread data storage containers
 net_status = "Initializing Scanner..."
 net_count = 0
