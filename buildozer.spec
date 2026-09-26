@@ -71,7 +71,11 @@ version = 0.1
 # "no matching distribution" as a fatal error rather than falling back to
 # building from source. Pinned python3 to 3.11.6, a release with years of
 # track record building successfully with Kivy/numpy/opencv on Android.
-requirements = python3==3.11.6,kivy,plyer,numpy==v2.3.5,opencv
+# FIX: pinning python3 alone left hostpython3 (the separate interpreter p4a
+# uses internally during the build) at its own default of 3.14.2, and p4a
+# requires the two to match exactly -- "python3 should have same version as
+# hostpython3, 3.11.6 != 3.14.2". hostpython3 must be pinned alongside it.
+requirements = python3==3.11.6,hostpython3==3.11.6,kivy,plyer,numpy==v2.3.5,opencv
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
