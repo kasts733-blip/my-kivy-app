@@ -27,16 +27,6 @@ except ImportError:
 if kivy_platform == 'android':
     from android.permissions import request_permissions, Permission
 
-# Pull Android dynamic runtime permission triggers if executing inside an APK
-if kivy_platform == 'android':
-    from android.permissions import request_permissions, Permission
-    request_permissions([
-        Permission.CAMERA,
-        Permission.RECORD_AUDIO,
-        Permission.WRITE_EXTERNAL_STORAGE,
-        Permission.READ_EXTERNAL_STORAGE,
-        Permission.POST_NOTIFICATIONS
-    ])
 # Global cross-thread data storage containers
 net_status = "Initializing Scanner..."
 net_count = 0
@@ -254,13 +244,39 @@ class EMFScannerDashboard(BoxLayout):
         self.capture = None
 
         # Fire up the dynamic platform permissions checking process before hooking hardware registers
+        # FIX #7: only CAMERA and ACCESS_FINE_LOCATION were requested here, even
+        # though buildozer.spec's android.permissions also declares storage and
+        # notification permissions. Declaring a permission in the manifest only
+        # tells Android the app may use it -- "dangerous" permissions (storage)
+        # and, since Android 13/API 33, POST_NOTIFICATIONS specifically still
+        # need a runtime request and user grant. Without ever requesting them,
+        # Android shows them as present-but-disabled in Settings and any
+        # notification call silently does nothing. Requesting the full set the
+        # app actually uses.
         if kivy_platform == 'android':
-            request_permissions([Permission.CAMERA, Permission.ACCESS_FINE_LOCATION], self.permissions_callback)
+            request_permissions([
+                Permission.CAMERA,
+                Permission.ACCESS_FINE_LOCATION,
+                Permission.WRITE_EXTERNAL_STORAGE,
+                Permission.READ_EXTERNAL_STORAGE,
+                Permission.POST_NOTIFICATIONS,
+            ], self.permissions_callback)
         else:
             self.permissions_granted = True
             self.initialize_hardware_components()
 
     def permissions_callback(self, permissions, results):
+        # FIX #8: Android's runtime permission result comes back on a JNI
+        # callback thread, not Kivy's main thread. The original code touched
+        # self.ids (a UI widget) and, on success, went on to start threads and
+        # register a Clock.schedule_interval directly from that callback --
+        # none of that is safe off the main thread, and is a very plausible
+        # cause of the app loading then crashing right after the permission
+        # dialog is answered. Clock.schedule_once marshals the rest of this
+        # back onto the main thread before touching anything Kivy-related.
+        Clock.schedule_once(lambda dt: self._handle_permissions_result(results))
+
+    def _handle_permissions_result(self, results):
         if all(results):
             self.permissions_granted = True
             self.initialize_hardware_components()
@@ -322,7 +338,7 @@ class EMFScannerDashboard(BoxLayout):
                 sim_frame = np.zeros((480, 640, 3), dtype=np.uint8)
                 y_line = int((time.time() * 150) % 440) + 20
                 cv2.line(sim_frame, (10, y_line), (630, y_line), (12, 180, 23), 2)
-                cv2.putText(sim_frame, "ACTIVE SENTINEL SCAN MATRIX OPEN", (130, 220),
+                cv2.putText(sim_frame, "ACTIVE ARGUS RS-28S SCAN MATRIX OPEN", (130, 220),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.55, (12, 180, 23), 1, cv2.LINE_AA)
                 self.current_frame = sim_frame
                 time.sleep(0.03)
