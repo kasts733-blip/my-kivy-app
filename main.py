@@ -338,7 +338,7 @@ class EMFScannerDashboard(BoxLayout):
                 sim_frame = np.zeros((480, 640, 3), dtype=np.uint8)
                 y_line = int((time.time() * 150) % 440) + 20
                 cv2.line(sim_frame, (10, y_line), (630, y_line), (12, 180, 23), 2)
-                cv2.putText(sim_frame, "ACTIVE ARGUS RS-28S SCAN MATRIX OPEN", (130, 220),
+                cv2.putText(sim_frame, "ACTIVE SENTINEL SCAN MATRIX OPEN", (130, 220),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.55, (12, 180, 23), 1, cv2.LINE_AA)
                 self.current_frame = sim_frame
                 time.sleep(0.03)
