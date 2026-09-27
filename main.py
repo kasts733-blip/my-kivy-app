@@ -253,12 +253,20 @@ class EMFScannerDashboard(BoxLayout):
         # Android shows them as present-but-disabled in Settings and any
         # notification call silently does nothing. Requesting the full set the
         # app actually uses.
+        # FIX #9: none of the app's described functionality (network scanning,
+        # camera-based lens-glint/IR detection, magnetometer readings) needs
+        # location or general storage access -- ACCESS_FINE_LOCATION and the
+        # two storage permissions were requested anyway, and on many Android
+        # 13+ devices legacy storage permissions are never actually granted.
+        # The gate below required ALL requested permissions before starting
+        # ANY hardware component, so one unrelated, unneeded permission being
+        # denied blocked camera scanning, calibration, and network scanning
+        # entirely -- matching "everything shows ACCESS DENIED and nothing
+        # works" even though Camera and Notifications were allowed. Only
+        # requesting what the app actually uses now.
         if kivy_platform == 'android':
             request_permissions([
                 Permission.CAMERA,
-                Permission.ACCESS_FINE_LOCATION,
-                Permission.WRITE_EXTERNAL_STORAGE,
-                Permission.READ_EXTERNAL_STORAGE,
                 Permission.POST_NOTIFICATIONS,
             ], self.permissions_callback)
         else:
@@ -274,14 +282,27 @@ class EMFScannerDashboard(BoxLayout):
         # cause of the app loading then crashing right after the permission
         # dialog is answered. Clock.schedule_once marshals the rest of this
         # back onto the main thread before touching anything Kivy-related.
-        Clock.schedule_once(lambda dt: self._handle_permissions_result(results))
+        Clock.schedule_once(lambda dt: self._handle_permissions_result(permissions, results))
 
-    def _handle_permissions_result(self, results):
-        if all(results):
+    def _handle_permissions_result(self, permissions, results):
+        # FIX #9 (continued): gate only on CAMERA, the one permission every
+        # feature in this app depends on (network scan needs none; the camera
+        # worker needs CAMERA; notifications are best-effort and already
+        # silently no-op via trigger_android_notification's own try/except
+        # when POST_NOTIFICATIONS isn't granted). Requiring every requested
+        # permission via all(results) was the actual cause of the app running
+        # but doing nothing.
+        granted = dict(zip(permissions, results))
+        camera_granted = next(
+            (g for p, g in granted.items() if p.endswith("CAMERA")), False
+        )
+        if camera_granted:
             self.permissions_granted = True
             self.initialize_hardware_components()
         else:
-            self.ids.telemetry_display.text = "[COLOR=ff3333][b]ERROR: ACCESS DENIED[/b][/COLOR]"
+            self.ids.telemetry_display.text = "[COLOR=ff3333][b]ERROR: CAMERA ACCESS DENIED[/b][/COLOR]"
+
+
 
     def initialize_hardware_components(self):
         # 1. Start background network socket worker threads
