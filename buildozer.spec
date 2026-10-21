@@ -75,7 +75,7 @@ version = 0.1
 # uses internally during the build) at its own default of 3.14.2, and p4a
 # requires the two to match exactly -- "python3 should have same version as
 # hostpython3, 3.11.6 != 3.14.2". hostpython3 must be pinned alongside it.
-requirements = python3==3.11.6,hostpython3==3.11.6,kivy,plyer,numpy==v2.3.5,opencv,pyjnius
+requirements = python3==3.11.6,hostpython3==3.11.6,kivy,plyer,numpy==v2.3.5,opencv
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -352,7 +352,7 @@ android.build_tools_version = 33.0.2
 # armeabi-v7a back (android.archs = arm64-v8aarmeabi-v7a) once the
 # arm64-v8a build succeeds end to end, ideally in its own separate run
 # rather than alongside it, to keep disk usage per run manageable.
-android.archs = arm64-v8a, armeabi-v7a
+android.archs = armeabi-v7a
 
 # (int) overrides automatic versionCode computation (used in build.gradle)
 # this is not the same as app version and should only be edited if you know what you're doing
