@@ -352,7 +352,7 @@ android.build_tools_version = 33.0.2
 # armeabi-v7a back (android.archs = arm64-v8aarmeabi-v7a) once the
 # arm64-v8a build succeeds end to end, ideally in its own separate run
 # rather than alongside it, to keep disk usage per run manageable.
-android.archs = armaeb64-v7a,arm64-v8a
+android.archs = arm64-v8a, armeabi-v7a
 
 # (int) overrides automatic versionCode computation (used in build.gradle)
 # this is not the same as app version and should only be edited if you know what you're doing
