@@ -1,5 +1,5 @@
 """
-Hidden-Camera Detector - integrated Kivy app (Android)
+Spy Detective Reconnaissance Unit- integrated Kivy app (Android)
 
 Home menu with four working modules:
   1. EMF / Magnetic   - magnetometer baseline + anomaly alarm        (physical)
